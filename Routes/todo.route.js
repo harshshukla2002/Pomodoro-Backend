@@ -5,14 +5,11 @@ const { Auth } = require("../Middleware/Auth");
 const todoRouter = express.Router();
 
 todoRouter.post("/create", Auth, async (req, res) => {
-  const { title, description } = req.body;
+  const { userId, title, description } = req.body;
   try {
-    const todo = await TodoModel.create({
-      title,
-      description,
-      userId: req.body.userId,
-    });
-    res.status(200).send({ msg: "Todo created successfully", todo });
+    const todo = TodoModel({ userId, title, description, status: false });
+    await todo.save();
+    res.status(200).send({ msg: "Todo created successfully" });
   } catch (error) {
     res.status(400).send({ error: error.message });
   }
@@ -27,36 +24,12 @@ todoRouter.get("/", Auth, async (req, res) => {
   }
 });
 
-todoRouter.get("/:id", Auth, async (req, res) => {
-  const todoId = req.params.id;
+todoRouter.patch("/update/:id", Auth, async (req, res) => {
+  const { id } = req.params;
   try {
-    const todo = await TodoModel.findOne({
-      _id: todoId,
-      userId: req.body.userId,
-    });
-    if (todo) {
-      res.status(200).send({ todo });
-    } else {
-      res.status(404).send({ msg: "Todo not found" });
-    }
-  } catch (error) {
-    res.status(400).send({ error: error.message });
-  }
-});
-
-todoRouter.patch("/:id", Auth, async (req, res) => {
-  const todoId = req.params.id;
-  const { title, description } = req.body;
-  try {
-    const updatedTodo = await TodoModel.findOneAndUpdate(
-      { _id: todoId },
-      { title, description },
-      { new: true }
-    );
+    const updatedTodo = await TodoModel.findOneAndUpdate({ _id: id }, req.body);
     if (updatedTodo) {
-      res
-        .status(200)
-        .send({ msg: "Todo updated successfully", todo: updatedTodo });
+      res.status(200).send({ msg: "Todo updated successfully" });
     } else {
       res.status(404).send({ msg: "Todo not found" });
     }
@@ -65,14 +38,12 @@ todoRouter.patch("/:id", Auth, async (req, res) => {
   }
 });
 
-todoRouter.delete("/:id", Auth, async (req, res) => {
-  const todoId = req.params.id;
+todoRouter.delete("/delete/:id", Auth, async (req, res) => {
+  const { id } = req.params;
   try {
-    const deletedTodo = await TodoModel.findOneAndDelete({ _id: todoId });
+    const deletedTodo = await TodoModel.findOneAndDelete({ _id: id });
     if (deletedTodo) {
-      res
-        .status(200)
-        .send({ msg: "Todo deleted successfully", todo: deletedTodo });
+      res.status(200).send({ msg: "Todo deleted successfully" });
     } else {
       res.status(404).send({ msg: "Todo not found" });
     }

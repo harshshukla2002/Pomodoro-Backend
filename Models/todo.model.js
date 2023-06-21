@@ -1,10 +1,9 @@
-const mongoose = require("mongoose")
+const mongoose = require("mongoose");
 
 const TodoSchema = mongoose.Schema(
   {
     userId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      type: String,
       required: true,
     },
     title: {
@@ -15,13 +14,12 @@ const TodoSchema = mongoose.Schema(
       type: String,
       required: true,
     },
-    completed: {
+    status: {
       type: Boolean,
-      default: false,
+      required: true,
     },
   },
   {
-    timestamps: true,
     versionKey: false,
   }
 );

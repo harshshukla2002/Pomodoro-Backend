@@ -1,26 +1,22 @@
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
 const blacklist = require("../blacklist");
+
 const Auth = (req, res, next) => {
-  const token = req.headers.authorization.split(" ")[1];
-  if (token) {
+  if (req.headers.authorization) {
+    const token = req.headers.authorization.split(" ")[1];
     if (blacklist.includes(token)) {
-      res.json({ msg: "login again" });
+      res.status(400).json({ msg: "login again" });
+      return;
     }
     try {
-      const decoded = jwt.verify(token, "Pomodro");
-      if (decoded) {
-        req.body.userId = decoded.userId;
-        next();
-      } else {
-        res.json({ msg: "invalid token" });
-      }
+      const decoded = jwt.verify(token, "Pomodoro-clone");
+      if (decoded) next();
+      else res.status(400).json({ msg: "invalid token or token is expired" });
     } catch (err) {
       res.json({ err });
     }
-  } else {
-    res.json({ msg: "login again" });
-  }
+  } else res.status(400).json({ msg: "Token Not Found!" });
 };
 
 module.exports = { Auth };

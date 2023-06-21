@@ -5,42 +5,44 @@ const jwt = require("jsonwebtoken");
 const userRouter = express.Router();
 const blacklist = require("../blacklist");
 const { Auth } = require("../Middleware/Auth");
+
 // Create User
 userRouter.post("/register", async (req, res) => {
-  const { name, email, gender, pass, age } = req.body;
+  const { name, email, gender, password } = req.body;
   try {
     const user = await UserModel.findOne({ email });
     if (user) {
       res.status(200).send({ msg: "User Already Registered!!" });
     } else {
-      bcrypt.hash(pass, 5, async (err, hash) => {
-        const user = await UserModel({ name, email, gender, pass: hash, age });
+      bcrypt.hash(password, 5, async (err, hash) => {
+        const user = UserModel({ name, email, gender, password: hash });
         await user.save();
-        res.status(200).send({ msg: "New User Registered!!", user: req.body });
+        res.status(200).send({ msg: "User Registered!!" });
       });
     }
   } catch (error) {
-    req.status(400).send({ error: error.message });
+    res.status(400).send({ error: error.message });
   }
 });
+
 // User Login
 userRouter.post("/login", async (req, res) => {
-  const { email, pass } = req.body;
+  const { email, password } = req.body;
   try {
     const user = await UserModel.findOne({ email });
     if (user) {
-      bcrypt.compare(pass, user.pass, (err, result) => {
+      bcrypt.compare(password, user.password, (err, result) => {
         if (result) {
           const token = jwt.sign(
             { userId: user._id, user: user.name },
-            "Pomodro"
+            "Pomodoro-clone"
           );
           res.status(200).send({ msg: "Login Successful!!", token, user });
         } else {
-          res.status(400).send({ msg: "Wrong Credentials!!" });
+          res.status(400).send({ msg: "Wrong Password!!" });
         }
       });
-    }
+    } else res.status(400).send({ msg: "Wrong Email!!" });
   } catch (error) {
     res.status(400).send({ error: error.message });
   }
@@ -60,7 +62,7 @@ userRouter.get("/logout", Auth, (req, res) => {
 
   try {
     blacklist.push();
-    res.status(200).json({ mag: "the user is logout" });
+    res.status(200).json({ msg: "the user is logged out" });
   } catch (err) {
     res.status(400).json({ err: err.message });
   }
